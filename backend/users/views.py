@@ -6,12 +6,16 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
 
 from .serializers import AvatarSerializer, UserCreateSerializer, UserSerializer
+from .paginator import UserPagination
 
 
 User = get_user_model()
 
 
 class UserViewSet(UserViewSet):
+    """Вьюсет для работы с пользователями."""
+
+    pagination_class = UserPagination
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -27,6 +31,8 @@ class UserViewSet(UserViewSet):
 
 
 class AvatarAPIView(APIView):
+    """Вьюха для работы с аватаром текущего пользователя."""
+
     def post(self, request):
         serializer = AvatarSerializer(instance=request.user,
                                       data=request.data)

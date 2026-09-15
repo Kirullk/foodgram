@@ -4,10 +4,30 @@ from .views import AvatarAPIView, UserViewSet
 
 
 urlpatterns = [
-    path('', UserViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('<int:id>/', UserViewSet.as_view({'get': 'retrieve'})),
-    path('me/', UserViewSet.as_view({'get': 'me'})),
-    path('me/avatar/', AvatarAPIView.as_view()),
-    path('set_password/', UserViewSet({'post': 'set_password'})),
+    path(
+        '',
+        UserViewSet.as_view({'get': 'list', 'post': 'create'}),
+        name='user-list',
+    ),
+    path(
+        '<int:id>/',
+        UserViewSet.as_view({'get': 'retrieve'}),
+        name='user-detail',
+    ),
+    path(
+        'me/',
+        UserViewSet.as_view({'get': 'me'}),
+        name='user-me',
+    ),
+    path(
+        'me/avatar/',
+        AvatarAPIView.as_view(),
+        name='user-avatar',
+    ),
+    path(
+        'set_password/',
+        UserViewSet.as_view({'post': 'set_password'}),
+        name='user-set-password',
+    ),
     path('', include('djoser.urls.authtoken')),
 ]

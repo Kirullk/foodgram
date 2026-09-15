@@ -8,6 +8,8 @@ User = get_user_model()
 
 
 class Base64ImageField(serializers.ImageField):
+    """Поле для декодирования base64-строки в файл изображения."""
+
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('base:image'):
             format, imgstr = data.split(';base64,')
@@ -17,6 +19,8 @@ class Base64ImageField(serializers.ImageField):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для чтения и обновления пользователя."""
+
     class Meta:
         model = User
         fields = (
@@ -31,16 +35,19 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для регистрации нового пользователя."""
+
     class Meta:
         model = User
         fields = (
             'email', 'id', 'username', 'first_name', 'last_name', 'password'
         )
-        read_only_fields = ('id')
+        read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
 
 class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор для загрузки и обновления аватара пользователя."""
     avatar = Base64ImageField()
 
     class Meta:

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'djoser',
     'users.apps.UsersConfig',
+    'recipes.apps.RecipesConfig'
 ]
 
 MIDDLEWARE = [
@@ -97,5 +98,5 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
 }

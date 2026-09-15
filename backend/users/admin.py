@@ -8,4 +8,6 @@ User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(UserAdmin):
+    """Расширенная админка пользователя."""
+
     search_fields = ('email', 'username')

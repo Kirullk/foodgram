@@ -3,11 +3,22 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """Расширенная модель пользователя."""
+
     is_subscribed = models.BooleanField(
-        default=False
+        'Подписка на рассылку',
+        default=False,
     )
     avatar = models.ImageField(
+        'Аватар',
         upload_to='users/',
         null=True,
-        blank=True
+        blank=True,
     )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
