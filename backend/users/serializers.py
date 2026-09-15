@@ -16,7 +16,6 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
