@@ -5,9 +5,25 @@ from django.db import models
 class User(AbstractUser):
     """Расширенная модель пользователя."""
 
-    is_subscribed = models.BooleanField(
-        'Подписка на рассылку',
-        default=False,
+    subscriptions = models.ManyToManyField(
+        'self',
+        symmetrical=False,
+        null=True,
+        blank=True,
+        verbose_name='Подписки'
+    ),
+    favorites = models.ManyToManyField(
+        'Recipe',
+        null=True,
+        blank=True,
+        related_name='Избранное',
+    )
+    shopping_cart = models.ManyToManyField(
+        'Recipe',
+        null=True,
+        blank=True,
+        related_name='in_carts',
+        verbose_name='Список покупок'
     )
     avatar = models.ImageField(
         'Аватар',

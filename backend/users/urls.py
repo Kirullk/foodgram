@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from .views import AvatarAPIView, UserViewSet
+from .views import AvatarAPIView, SubscriptionAPIView, UserViewSet
 
 
 urlpatterns = [
@@ -29,5 +29,13 @@ urlpatterns = [
         UserViewSet.as_view({'post': 'set_password'}),
         name='user-set-password',
     ),
-    path('', include('djoser.urls.authtoken')),
+    path(
+        '',
+        include('djoser.urls.authtoken')
+    ),
+    path(
+        'subscriptions/',
+        SubscriptionAPIView.as_view(),
+        name='subscriptions-list'
+    ),
 ]

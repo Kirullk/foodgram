@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Ingredient, Tag
+from core.fields import Base64ImageField
+from .models import Ingredient, Recipe, Tag
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -19,3 +20,28 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
         read_only_fields = ('id',)
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для рецептов со полным перечнем полей."""
+
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'tags', 'author', 'ingredients',
+            'is_favorited', 'is_in_shopping_cart',
+            'name', 'image', 'text', 'cooking_time'
+        )
+        read_only_fields = (
+            'id', 'author', 'is_favorited', 'is_in_shopping_cart'
+        )
+
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для рецептов."""
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')

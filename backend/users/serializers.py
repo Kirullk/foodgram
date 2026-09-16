@@ -1,25 +1,17 @@
-import base64
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
+
+from core.fields import Base64ImageField
+from recipes.serializers import ShortRecipeSerializer
 
 
 User = get_user_model()
 
 
-class Base64ImageField(serializers.ImageField):
-    """Поле для декодирования base64-строки в файл изображения."""
-
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('base:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
-
-
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения и обновления пользователя."""
+
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -32,6 +24,10 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name', 'is_subscribed'
         )
         extra_kwargs = {'password': {'write_only': True}}
+
+    def get_is_subscribed(self, obj):
+        request = self.data.get('request')
+        return request.user.subscriptions.filter(id=obj.id).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -53,3 +49,23 @@ class AvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('avatar',)
+
+
+class SubscriptionSerializer(UserSerializer):
+    """Сериализатор для списка подписок."""
+
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'is_subscribed',
+            'recipes', 'recipes_count', 'avatar'
+        )
+
+    def get_resipes(self, obj):
+        return ShortRecipeSerializer(obj.recipes.all(), many=True)
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
