@@ -6,6 +6,7 @@ from rest_framework import status
 
 from .serializers import AvatarSerializer, SubscriptionSerializer, UserCreateSerializer, UserSerializer
 from core.pagination import UserPagination
+from core.views import CreateDeleteViewSet
 
 
 User = get_user_model()
@@ -22,20 +23,10 @@ class UserViewSet(DjoserUserViewSet):
         return UserSerializer
 
 
-class AvatarViewSet(APIView):
+class AvatarViewSet(CreateDeleteViewSet):
     """Вьюха для работы с аватаром текущего пользователя."""
 
-    def post(self, request):
-        serializer = AvatarSerializer(instance=request.user,
-                                      data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request):
-        request.user.avatar.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    serializer = AvatarSerializer
 
 
 class SubscriptionAPIView(APIView):
@@ -44,3 +35,10 @@ class SubscriptionAPIView(APIView):
         subscriptions = request.user.subscriptions.all()
         serializer = SubscriptionSerializer(subscriptions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SubscibeViewSet(CreateDeleteViewSet):
+
+    detail = True
+    url_path = 'subscribe'
+    serializer = SubscriptionSerializer

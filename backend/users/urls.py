@@ -1,6 +1,7 @@
 from django.urls import path, include
+from rest_framework import routers
 
-from .views import AvatarAPIView, SubscriptionAPIView, UserViewSet
+from .views import AvatarViewSet, SubscriptionAPIView, UserViewSet
 
 
 urlpatterns = [
@@ -21,7 +22,7 @@ urlpatterns = [
     ),
     path(
         'me/avatar/',
-        AvatarAPIView.as_view(),
+        AvatarViewSet.as_view(),
         name='user-avatar',
     ),
     path(

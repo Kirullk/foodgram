@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 from core.fields import Base64ImageField
+from core.serializers import CreateDeleteSerializer
 from recipes.serializers import ShortRecipeSerializer
 
 
@@ -51,9 +52,11 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ('avatar',)
 
 
-class SubscriptionSerializer(UserSerializer):
-    """Сериализатор для списка подписок."""
+class SubscriptionSerializer(CreateDeleteSerializer, UserSerializer):
+    """Сериализатор для подписок."""
 
+    object = User
+    field = 'subsciptions'
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -64,7 +67,7 @@ class SubscriptionSerializer(UserSerializer):
             'recipes', 'recipes_count', 'avatar'
         )
 
-    def get_resipes(self, obj):
+    def get_recipes(self, obj):
         return ShortRecipeSerializer(obj.recipes.all(), many=True)
 
     def get_recipes_count(self, obj):
