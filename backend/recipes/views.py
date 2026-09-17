@@ -3,9 +3,10 @@ from rest_framework import filters, viewsets
 
 
 from core import mixins
+from core.views import CreateDeleteViewSet
 from .models import Ingredient, Recipe, Tag
 from .paginator import RecipePagination
-from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer
+from .serializers import IngredientSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer
 
 
 class TagViewSet(mixins.ListRetrieveViewSet):
@@ -22,6 +23,24 @@ class IngredientViewSet(mixins.ListRetrieveViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
+
+
+class FavoriteViewSet(CreateDeleteViewSet):
+
+    detail = True
+    url_path = 'favorite'
+    serializer = ShortRecipeSerializer
+    object = Recipe
+    field = 'favorites'
+
+
+class CartViewSet(CreateDeleteViewSet):
+
+    detail = True
+    url_path = 'shopping_cart'
+    serializer = ShortRecipeSerializer
+    object = Recipe
+    field = 'shopping_cart'
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

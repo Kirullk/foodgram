@@ -8,19 +8,17 @@ class User(AbstractUser):
     subscriptions = models.ManyToManyField(
         'self',
         symmetrical=False,
-        null=True,
         blank=True,
         verbose_name='Подписки'
     ),
     favorites = models.ManyToManyField(
-        'Recipe',
-        null=True,
+        'recipes.Recipe',
         blank=True,
-        related_name='Избранное',
+        related_name='favorited_by',
+        verbose_name='Избранное',
     )
     shopping_cart = models.ManyToManyField(
-        'Recipe',
-        null=True,
+        'recipes.Recipe',
         blank=True,
         related_name='in_carts',
         verbose_name='Список покупок'

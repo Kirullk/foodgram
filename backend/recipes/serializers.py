@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from core.fields import Base64ImageField
+from core.serializers import CreateDeleteSerializer
 from .models import Ingredient, Recipe, Tag
 
 
@@ -39,7 +40,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
 
-class ShortRecipeSerializer(serializers.ModelSerializer):
+class ShortRecipeSerializer(CreateDeleteSerializer,
+                            serializers.ModelSerializer):
     """Сериализатор для рецептов."""
 
     class Meta:

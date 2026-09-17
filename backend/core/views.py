@@ -8,16 +8,19 @@ class CreateDeleteViewSet(ViewSet):
     detail = False
     url_path = None
     serializer = None
+    object = None
+    field = None
     status = status.HTTP_201_CREATED if detail else status.HTTP_200_OK
 
     @action(detail=detail, methods=('post', 'delete'), url_path=url_path)
     def toggle(self, request, pk=None):
-
         serializer = self.serializer(instance=request.user,
                                      data=request.data,
+                                     object=self.object,
+                                     field=self.field,
                                      context={'request': request,
                                               'pk': pk,
-                                              'detail': self.detail})
+                                              'detail': self.detail},)
         if serializer.is_valid(raise_exception=True):
             if request.method == 'POST':
                 serializer.save()

@@ -1,11 +1,12 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouters
+from rest_framework.routers import DefaultRouter
 
-from .views import AvatarViewSet, SubscribeViewSet, SubscriptionAPIView, UserViewSet
+from .views import AvatarViewSet, SubscribeViewSet, SubscriptionAPIView
+from users.views import UserViewSet
 
 
-router = DefaultRouters()
-router.register('', SubscribeViewSet, basename='subscribe')
+router = DefaultRouter()
+router.register('', SubscribeViewSet, basename='subscriptions')
 
 
 urlpatterns = [
@@ -20,7 +21,7 @@ urlpatterns = [
     ),
     path(
         'me/avatar/',
-        AvatarViewSet.as_view(),
+        AvatarViewSet.as_view({'post': 'action', 'delete': 'action'}),
         name='user-avatar',
     ),
     path(

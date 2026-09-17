@@ -1,7 +1,6 @@
 from django.urls import path, include
-from rest_framework import routers
 
-from .views import AvatarViewSet, SubscriptionAPIView, UserViewSet
+from .views import UserViewSet
 
 
 urlpatterns = [
@@ -16,16 +15,6 @@ urlpatterns = [
         name='user-detail',
     ),
     path(
-        'me/',
-        UserViewSet.as_view({'get': 'me'}),
-        name='user-me',
-    ),
-    path(
-        'me/avatar/',
-        AvatarViewSet.as_view(),
-        name='user-avatar',
-    ),
-    path(
         'set_password/',
         UserViewSet.as_view({'post': 'set_password'}),
         name='user-set-password',
@@ -33,10 +22,5 @@ urlpatterns = [
     path(
         '',
         include('djoser.urls.authtoken')
-    ),
-    path(
-        'subscriptions/',
-        SubscriptionAPIView.as_view(),
-        name='subscriptions-list'
     ),
 ]

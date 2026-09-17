@@ -4,8 +4,6 @@ from rest_framework.response import Response
 
 
 class CreateDeleteSerializer:
-    field = None
-    object = None
 
     def create(self, validated_data):
         pk = self.context.get('pk')
