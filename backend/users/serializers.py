@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
 
 
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(DjoserUserCreateSerializer):
     """Сериализатор для чтения и обновления пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -23,11 +24,11 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj):
-        request = self.data.get('request')
+        request = self.context.get('request')
         return request.user.subscriptions.filter(id=obj.id).exists()
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(DjoserUserCreateSerializer):
     """Сериализатор для регистрации нового пользователя."""
 
     class Meta:

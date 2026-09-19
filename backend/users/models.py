@@ -5,12 +5,16 @@ from django.db import models
 class User(AbstractUser):
     """Расширенная модель пользователя."""
 
+    email = models.EmailField(
+        'Имейл',
+        unique=True
+    )
     subscriptions = models.ManyToManyField(
         'self',
         symmetrical=False,
         blank=True,
         verbose_name='Подписки'
-    ),
+    )
     favorites = models.ManyToManyField(
         'recipes.Recipe',
         blank=True,
@@ -29,6 +33,9 @@ class User(AbstractUser):
         null=True,
         blank=True,
     )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
 
     class Meta:
         verbose_name = 'Пользователь'

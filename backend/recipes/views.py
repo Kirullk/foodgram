@@ -1,61 +1,57 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from rest_framework import viewsets, filters
 
-
-from core import mixins
-from core.views import CreateDeleteViewSet
+from core.filters import RecipeFilter
+from core.mixins import ListRetrieveMixin
+from core.pagination import RecipePagination
+from core.permission import IsAuthorOrReadOnly
+from core.views import RecipeRelationViewSet
 from .models import Ingredient, Recipe, Tag
-from .paginator import RecipePagination
-from .serializers import IngredientSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer
+from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer
 
 
-class TagViewSet(mixins.ListRetrieveViewSet):
+class TagViewSet(ListRetrieveMixin):
     """Вьюсет для работы с тегами."""
 
-    model = Tag.objects.all()
+    queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
-class IngredientViewSet(mixins.ListRetrieveViewSet):
+class IngredientViewSet(ListRetrieveMixin):
     """Вьюсет для работы с ингредиентами."""
 
-    model = Ingredient.objects.all()
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name',)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = queryset.filter(name__istartswith=name)
+        return queryset
 
 
-class FavoriteViewSet(CreateDeleteViewSet):
+class FavoriteViewSet(RecipeRelationViewSet):
 
-    detail = True
     url_path = 'favorite'
-    serializer = ShortRecipeSerializer
-    object = Recipe
     field = 'favorites'
 
 
-class CartViewSet(CreateDeleteViewSet):
+class CartViewSet(RecipeRelationViewSet):
 
-    detail = True
     url_path = 'shopping_cart'
-    serializer = ShortRecipeSerializer
-    object = Recipe
     field = 'shopping_cart'
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthorOrReadOnly,)
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     http_method_names = ('get', 'post', 'patch',
                          'delete', 'head', 'options')
-    paginaton_class = RecipePagination
+    pagination_class = RecipePagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('user__id', 'tag__slug')
-
-    def permission_classes(self):
-        if self.action in ('patch', 'delete'):
-            return IsAuthor
-        return super().permission_classes()
+    filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

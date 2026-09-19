@@ -1,30 +1,35 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import GenericViewSet
+
+from recipes.serializers import ShortRecipeSerializer
 
 
-class CreateDeleteViewSet(ViewSet):
-    detail = False
+class RecipeRelationViewSet(GenericViewSet):
     url_path = None
-    serializer = None
-    object = None
     field = None
-    status = status.HTTP_201_CREATED if detail else status.HTTP_200_OK
+    serializer_class = ShortRecipeSerializer
 
-    @action(detail=detail, methods=('post', 'delete'), url_path=url_path)
+    @action(detail=True, methods=('post', 'delete'), url_path=url_path)
     def toggle(self, request, pk=None):
-        serializer = self.serializer(instance=request.user,
-                                     data=request.data,
-                                     object=self.object,
-                                     field=self.field,
-                                     context={'request': request,
-                                              'pk': pk,
-                                              'detail': self.detail},)
-        if serializer.is_valid(raise_exception=True):
-            if request.method == 'POST':
-                serializer.save()
-                return Response(serializer.data, status=self.status)
 
-            elif request.method == 'DELETE':
-                return serializer.delete()
+        if request.method == 'POST':
+            serializer = self.get_serializer(
+                data=request.data,
+                context={'request': request, 'pk': pk, 'field': self.field},
+            )
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            fields = getattr(request.user, self.field)
+            obj = get_object_or_404(self.object, pk=pk)
+            if fields.filter(id=obj.id).exists():
+                fields.remove(obj)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({'error': 'Данная запись не существует'},
+                            status=status.HTTP_400_BAD_REQUEST)

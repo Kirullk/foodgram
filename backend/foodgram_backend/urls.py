@@ -17,7 +17,7 @@ urlpatterns = [
     ),
     path(
         'api/users/',
-        include('account.urls')
+        include('accounts.urls')
     ),
     path(
         'api/',
