@@ -14,9 +14,9 @@ User = get_user_model()
 
 class AvatarViewSet(GenericViewSet):
 
-    @action(detail=False, methods=('post', 'delete'), url_path='me/avatar')
+    @action(detail=False, methods=('put', 'delete'), url_path='me/avatar')
     def avatar(self, request):
-        if request.method == 'POST':
+        if request.method == 'PUT':
             serializer = AvatarSerializer(
                 instance=request.user,
                 data=request.data,

@@ -76,15 +76,15 @@ class Recipe(models.Model):
         'Изображение',
         upload_to='recipes/images/',
     )
-    ingredients = models.ForeignKey(
-        Ingredient,
-        on_delete=models.PROTECT,
-        verbose_name='Ингредиент',
+    ingredients = models.ManyToManyField(
+        'Ingredient',
+        through='RecipeIngredient',
+        related_name='recipes',
     )
-    tags = models.ForeignKey(
-        Tag,
-        on_delete=models.PROTECT,
+    tags = models.ManyToManyField(
+        'Tag',
         verbose_name='Тег',
+        related_name='recipes',
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления (мин)',
@@ -97,3 +97,17 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients'
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients'
+    )
+    amount = models.PositiveSmallIntegerField('Количество')

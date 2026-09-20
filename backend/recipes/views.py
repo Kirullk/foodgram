@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters
+from rest_framework import viewsets
 
 from core.filters import RecipeFilter
 from core.mixins import ListRetrieveMixin
@@ -7,7 +7,7 @@ from core.pagination import RecipePagination
 from core.permission import IsAuthorOrReadOnly
 from core.views import RecipeRelationViewSet
 from .models import Ingredient, Recipe, Tag
-from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer
+from .serializers import IngredientSerializer, RecipeCreateSerializer, RecipeSerializer, TagSerializer
 
 
 class TagViewSet(ListRetrieveMixin):
@@ -46,12 +46,16 @@ class CartViewSet(RecipeRelationViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrReadOnly,)
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     http_method_names = ('get', 'post', 'patch',
                          'delete', 'head', 'options')
     pagination_class = RecipePagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update'):
+            return RecipeCreateSerializer
+        return RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

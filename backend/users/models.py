@@ -6,7 +6,7 @@ class User(AbstractUser):
     """Расширенная модель пользователя."""
 
     email = models.EmailField(
-        'Имейл',
+        'Email',
         unique=True
     )
     subscriptions = models.ManyToManyField(

@@ -12,9 +12,9 @@ class RecipeRelationViewSet(GenericViewSet):
     field = None
     serializer_class = ShortRecipeSerializer
 
-    @action(detail=True, methods=('post', 'delete'), url_path=url_path)
+    @action(detail=True, methods=('post', 'delete'))
     def toggle(self, request, pk=None):
-
+        url_path = self.url_path
         if request.method == 'POST':
             serializer = self.get_serializer(
                 data=request.data,
