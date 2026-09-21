@@ -1,11 +1,11 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from core.filters import RecipeFilter
-from core.mixins import ListRetrieveMixin
+from core.mixins import ListRetrieveMixin, RecipeRelationMixin
 from core.pagination import RecipePagination
 from core.permission import IsAuthorOrReadOnly
-from core.views import RecipeRelationViewSet
 from .models import Ingredient, Recipe, Tag
 from .serializers import IngredientSerializer, RecipeCreateSerializer, RecipeSerializer, TagSerializer
 
@@ -31,16 +31,26 @@ class IngredientViewSet(ListRetrieveMixin):
         return queryset
 
 
-class FavoriteViewSet(RecipeRelationViewSet):
+class FavoriteViewSet(RecipeRelationMixin):
 
-    url_path = 'favorite'
-    field = 'favorites'
+    relation_field = 'favorites'
+    error_exists = 'Данный рецепт уже добавлен'
+    error_not_exists = 'Объект уже удален из избранных'
+
+    @action(detail=True, methods=('post', 'delete'))
+    def favorite(self, request, pk=None):
+        return self.toggle_relation(request, pk)
 
 
-class CartViewSet(RecipeRelationViewSet):
+class CartViewSet(RecipeRelationMixin):
 
-    url_path = 'shopping_cart'
-    field = 'shopping_cart'
+    relation_field = 'shopping_cart'
+    error_exists = 'Данный рецепт уже добавлен'
+    error_not_exists = 'Объект уже удален из списка покупок'
+
+    @action(detail=True, methods=('post', 'delete'))
+    def shopping_cart(self, request, pk=None):
+        return self.toggle_relation(request, pk)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -51,6 +61,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = RecipePagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tags = self.request.query_params.getlist('tags')
+        if tags:
+            return queryset.filter(tags__slug__in=tags)
+        return super().get_queryset()
 
     def get_serializer_class(self):
         if self.action in ('create', 'update'):

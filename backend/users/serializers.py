@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
-
-
+from djoser.serializers import (
+    UserSerializer as DjoserUserSerializer,
+    UserCreateSerializer as DjoserUserCreateSerializer,
+)
 User = get_user_model()
 
 
-class UserSerializer(DjoserUserCreateSerializer):
+class UserSerializer(DjoserUserSerializer):
     """Сериализатор для чтения и обновления пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()

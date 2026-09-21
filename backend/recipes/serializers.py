@@ -1,6 +1,4 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers
 
 from core.fields import Base64ImageField
 from .models import Ingredient, Recipe, RecipeIngredient, Tag
@@ -91,29 +89,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return RecipeSerializer(instance, context=self.context).data
 
 
-
-
-
-
-
-
-
-
-
-
 class ShortRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для рецептов."""
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-
-    def create(self):
-        fields = getattr(self.context.get('request').user,
-                         self.context.get('field'))
-        obj = get_object_or_404(Recipe, pk=self.context.get('pk'))
-        if fields.filter(id=obj.id).exists():
-            return Response({'error': 'Данная запись уже добавлена'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        fields.add(obj)
-        return self.object
