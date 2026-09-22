@@ -85,6 +85,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ])
         return recipe
 
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        instance.tags.set(tags_data)
+        instance.recipe_ingredients.all().delete()
+        RecipeIngredient.objects.bulk_create([
+            RecipeIngredient(recipe=instance, ingredient=i['id'],
+                             amount=i['amount'])
+            for i in ingredients_data
+        ])
+        return instance
+
     def to_representation(self, instance):
         return RecipeSerializer(instance, context=self.context).data
 

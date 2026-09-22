@@ -1,3 +1,5 @@
+import secrets
+
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -89,11 +91,22 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления (мин)',
     )
+    short_code = models.CharField(
+        'Короткая ссылка',
+        max_length=10,
+        unique=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-id',)
+
+    def save(self, *args, **kwargs):
+        if not self.short_code:
+            self.short_code = secrets.token_urlsafe(4)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

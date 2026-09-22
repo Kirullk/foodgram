@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework import routers
 
 from .views import (CartViewSet, FavoriteViewSet, IngredientViewSet,
-                    RecipeViewSet, TagViewSet)
+                    RecipeViewSet, short_link_redirect, TagViewSet)
 
 
 router = routers.DefaultRouter()
@@ -13,5 +13,5 @@ router.register(r'recipes', CartViewSet, basename='carts')
 router.register(r'recipes', FavoriteViewSet, basename='favorites')
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
 ]

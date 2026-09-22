@@ -5,6 +5,7 @@ services:
     container_name: foodgram-back
     build: ../backend
     volumes:
+      - ../backend:/app
       - media_volume:/app/media
       - ./db.sqlite3:/app/db.sqlite3
 
