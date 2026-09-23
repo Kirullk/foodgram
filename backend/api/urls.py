@@ -41,7 +41,7 @@ urlpatterns = [
         name='user-me',
     ),
     path(
-        '',
+        'auth/',
         include('djoser.urls.authtoken')
     ),
 ]
