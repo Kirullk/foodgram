@@ -1,13 +1,20 @@
+import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-sw$9(-3v%7bnt*g2h6)^7c!5jx)_2e-f(twcg%a_amj)68o54v'
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-DEBUG = True
+ALLOWED_HOSTS = os.getenv(
+    'ALLOWED_HOSTS', 'localhost,127.0.0.1'
+).split(',')
 
-ALLOWED_HOSTS = []
+SECRET_KEY = os.getenv('SECRET_KEY', 'SECRET')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -61,6 +68,16 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'foodgram'),
+        'USER': os.getenv('POSTGRES_USER', 'user_foodgram'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432),
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -90,7 +107,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_ROOT = BASE_DIR / 'backend_static'
 STATIC_URL = '/static/'
 
 MAILERS = {
