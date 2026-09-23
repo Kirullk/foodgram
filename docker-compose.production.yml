@@ -24,7 +24,6 @@ services:
       - db
 
   frontend:
-    restart: always
     container_name: foodgram-front
     image: milojop/foodgram_front:latest 
     command: cp -r /app/build/. /static/ 
