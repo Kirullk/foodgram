@@ -26,11 +26,24 @@ class UserSerializer(DjoserUserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
         return request.user.subscriptions.filter(id=obj.id).exists()
 
 
 class UserCreateSerializer(DjoserUserCreateSerializer):
     """Сериализатор для регистрации нового пользователя."""
+
+    first_name = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        max_length=150,
+    )
+    last_name = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        max_length=150,
+    )
 
     class Meta:
         model = User
