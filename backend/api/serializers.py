@@ -8,7 +8,7 @@ from djoser.serializers import (
 )
 from rest_framework import serializers
 
-from .models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 
 
 User = get_user_model()
