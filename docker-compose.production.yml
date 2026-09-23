@@ -1,0 +1,45 @@
+version: '3.3'
+volumes: 
+  pg_data: 
+  static: 
+  media:
+
+services:
+  db:
+    restart: always
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  backend:
+    restart: always
+    container_name: foodgram-back
+    image: milojop/foodgram_back:latest 
+    env_file: .env
+    volumes:
+      - static:/app/backend_static
+      - media:/app/media
+    depends_on:
+      - db
+
+  frontend:
+    restart: always
+    container_name: foodgram-front
+    image: milojop/foodgram_front:latest 
+    command: cp -r /app/build/. /static/ 
+    volumes: 
+      - static:/static
+
+  nginx:
+    restart: always
+    container_name: foodgram-proxy
+    image: milojop/foodgram_nginx:latest 
+    env_file: .env
+    volumes: 
+      - static:/static
+      - media:/media
+    ports: 
+      - 8000:80 
+    depends_on:
+      - backend
