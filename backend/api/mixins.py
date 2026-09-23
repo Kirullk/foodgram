@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from recipes.models import Recipe
-from recipes.serializers import ShortRecipeSerializer
+from .serializers import ShortRecipeSerializer
 
 
 class ListRetrieveMixin(mixins.ListModelMixin,
