@@ -123,4 +123,6 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name='recipe_ingredients'
     )
-    amount = models.PositiveSmallIntegerField('Количество')
+    amount = models.PositiveSmallIntegerField(
+        'Количество'
+    )
