@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from recipes.views import short_link_redirect
+from api.views import short_link_redirect
 
 
 urlpatterns = [
@@ -12,20 +12,8 @@ urlpatterns = [
         admin.site.urls
     ),
     path(
-        'api/auth/',
-        include('users.urls')
-    ),
-    path(
-        'api/users/',
-        include('users.urls')
-    ),
-    path(
-        'api/users/',
-        include('accounts.urls')
-    ),
-    path(
         'api/',
-        include('recipes.urls')
+        include('api.urls')
     ),
     path(
         's/<str:code>/',
@@ -33,7 +21,6 @@ urlpatterns = [
         name='short-link'
     )
 ]
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,

@@ -1,8 +1,109 @@
+import base64
+
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer,
+    UserSerializer as DjoserUserSerializer,
+)
 from rest_framework import serializers
 
-from core.fields import Base64ImageField
 from .models import Ingredient, Recipe, RecipeIngredient, Tag
-from users.serializers import UserSerializer
+
+
+User = get_user_model()
+
+
+class Base64ImageField(serializers.ImageField):
+    """Поле для декодирования base64-строки в файл изображения."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
+
+
+class UserSerializer(DjoserUserSerializer):
+    """Сериализатор для чтения и обновления пользователя."""
+
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'is_subscribed', 'avatar'
+        )
+        read_only_fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'is_subscribed'
+        )
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return request.user.subscriptions.filter(id=obj.id).exists()
+
+
+class UserCreateSerializer(DjoserUserCreateSerializer):
+    """Сериализатор для регистрации нового пользователя."""
+
+    first_name = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        max_length=150,
+    )
+    last_name = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        max_length=150,
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name', 'password'
+        )
+        read_only_fields = ('id',)
+        extra_kwargs = {'password': {'write_only': True}}
+
+
+class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор для загрузки и обновления аватара пользователя."""
+    avatar = Base64ImageField()
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
+
+
+class SubscriptionSerializer(UserSerializer):
+    """Сериализатор для подписок."""
+
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'is_subscribed',
+            'recipes', 'recipes_count', 'avatar'
+        )
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes = obj.recipes.all()
+        limit = request.query_params.get('recipes_limit')
+        if limit and limit.isdigit():
+            recipes = recipes[:int(limit)]
+        return ShortRecipeSerializer(recipes, many=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class TagSerializer(serializers.ModelSerializer):
