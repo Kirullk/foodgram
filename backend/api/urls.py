@@ -17,6 +17,10 @@ router.register('', SubscribeViewSet, basename='subscriptions')
 
 urlpatterns = [
     path(
+        'auth/',
+        include('djoser.urls.authtoken')
+    ),
+    path(
         '',
         include(router.urls)
     ),
@@ -39,9 +43,5 @@ urlpatterns = [
         'me/',
         UserViewSet.as_view({'get': 'me'}),
         name='user-me',
-    ),
-    path(
-        'auth/',
-        include('djoser.urls.authtoken')
     ),
 ]
