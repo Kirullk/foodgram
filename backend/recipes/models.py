@@ -23,7 +23,7 @@ class Tag(models.Model):
         ordering = ('id',)
 
     def __str__(self):
-        return f'Тег {self.name}'
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -47,7 +47,7 @@ class Ingredient(models.Model):
     )
     measurement_unit = models.CharField(
         'Единица измерения',
-        max_length=max(len(unit) for unit, _ in MeasurementUnit.choices),
+        max_length=20,
         choices=MeasurementUnit.choices,
     )
 
@@ -57,7 +57,7 @@ class Ingredient(models.Model):
         ordering = ('id',)
 
     def __str__(self):
-        return f'Ингредиент {self.name}'
+        return self.name
 
 
 class Recipe(models.Model):
@@ -126,3 +126,11 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         'Количество'
     )
+
+    class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+        ordering = ('-id',)
+
+    def __str__(self):
+        return self.recipe.name
