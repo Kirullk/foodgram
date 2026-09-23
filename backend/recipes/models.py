@@ -29,17 +29,6 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Модель Ингредиента."""
 
-    class MeasurementUnit(models.TextChoices):
-        """Базовые единицы измерения."""
-        GRAM = 'г', 'грамм'
-        KILOGRAM = 'кг', 'килограмм'
-        MILLILITER = 'мл', 'миллилитр'
-        LITER = 'л', 'литр'
-        TEASPOON = 'ч. л.', 'чайная ложка'
-        TABLESPOON = 'ст. л.', 'столовая ложка'
-        CUP = 'стакан', 'стакан'
-        PIECE = 'шт.', 'штука'
-
     name = models.CharField(
         'Название',
         max_length=150,
@@ -48,7 +37,6 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(
         'Единица измерения',
         max_length=20,
-        choices=MeasurementUnit.choices,
     )
 
     class Meta:
