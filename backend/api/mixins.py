@@ -1,23 +1,23 @@
-from rest_framework import mixins, viewsets
-from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import mixins, status, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from recipes.models import Recipe
+
 from .serializers import ShortRecipeSerializer
 
 
 class ListRetrieveMixin(mixins.ListModelMixin,
                         mixins.RetrieveModelMixin,
                         viewsets.GenericViewSet):
-    """Миксин для просмотра нескольких и отдельного объекта."""
+    """Миксин для list и retrieve."""
 
     permission_classes = (AllowAny,)
 
 
 class RecipeRelationMixin(viewsets.GenericViewSet):
-    """Миксин для добавления/удаления рецепта в связи пользователя."""
+    """Миксин для добавления/удаления рецепта в связи."""
 
     relation_field = None
     error_exists = 'Уже добавлено'

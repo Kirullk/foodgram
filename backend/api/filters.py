@@ -4,9 +4,13 @@ from recipes.models import Recipe
 
 
 class RecipeFilter(django_filters.FilterSet):
+    """Фильтр рецептов по автору, избранному и корзине."""
+
     author = django_filters.NumberFilter(field_name='author_id')
     is_favorited = django_filters.NumberFilter(method='filter_favorited')
-    is_in_shopping_cart = django_filters.NumberFilter(method='filter_in_cart')
+    is_in_shopping_cart = django_filters.NumberFilter(
+        method='filter_in_cart'
+    )
 
     class Meta:
         model = Recipe
