@@ -20,10 +20,8 @@ class RecipeFilter(django_filters.FilterSet):
     """Фильтр рецептов."""
 
     author = django_filters.NumberFilter(field_name='author_id')
-    is_favorited = django_filters.NumberFilter(method='filter_favorited')
-    is_in_shopping_cart = django_filters.NumberFilter(
-        method='filter_in_cart'
-    )
+    is_favorited = django_filters.BooleanFilter(method='filter_favorited')
+    is_in_shopping_cart = django_filters.BooleanFilter(method='filter_in_cart')
     tags = django_filters.AllValuesMultipleFilter(
         field_name='tags__slug',
     )
