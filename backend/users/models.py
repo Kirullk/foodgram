@@ -9,24 +9,6 @@ class User(AbstractUser):
         'Email',
         unique=True
     )
-    subscriptions = models.ManyToManyField(
-        'self',
-        symmetrical=False,
-        blank=True,
-        verbose_name='Подписки'
-    )
-    favorites = models.ManyToManyField(
-        'recipes.Recipe',
-        blank=True,
-        related_name='favorited_by',
-        verbose_name='Избранное',
-    )
-    shopping_cart = models.ManyToManyField(
-        'recipes.Recipe',
-        blank=True,
-        related_name='in_carts',
-        verbose_name='Список покупок'
-    )
     avatar = models.ImageField(
         'Аватар',
         upload_to='users/',
@@ -35,7 +17,7 @@ class User(AbstractUser):
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     class Meta:
         verbose_name = 'Пользователь'

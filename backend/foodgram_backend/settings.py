@@ -106,6 +106,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 MEDIA_ROOT = BASE_DIR / 'media'
