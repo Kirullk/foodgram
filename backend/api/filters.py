@@ -24,13 +24,17 @@ class RecipeFilter(django_filters.FilterSet):
     is_in_shopping_cart = django_filters.NumberFilter(
         method='filter_in_cart'
     )
-    tags = django_filters.AllValuesMultipleFilter(
-        field_name='tags__slug',
-    )
+    tags = django_filters.CharFilter(method='filter_tags')
+
+    def filter_tags(self, queryset, name, value):
+        tags = self.request.query_params.getlist('tags')
+        if tags:
+            return queryset.filter(tags__slug__in=tags).distinct()
+        return queryset
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
     def filter_favorited(self, queryset, name, value):
         if self.request.user.is_authenticated and value == 1:
