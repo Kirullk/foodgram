@@ -102,6 +102,7 @@ class Recipe(models.Model):
     created_at = models.DateTimeField(
         'Дата создания',
         auto_now_add=True,
+        
     )
 
     class Meta:
@@ -139,7 +140,7 @@ class RecipeIngredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
-        ordering = ('id',)
+        ordering = ('recipe__name',)
 
     def __str__(self):
         return f'{self.ingredient.name} в {self.recipe.name}'
