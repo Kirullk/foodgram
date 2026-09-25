@@ -8,7 +8,9 @@ from djoser.serializers import (
 )
 from rest_framework import serializers
 
-from recipes.models import Follow, Ingredient, Recipe, RecipeIngredient, Tag
+from api.constants import (NAME_MAX_LENGTH, MIN_AMOUNT, MIN_COOKING_TIME)
+from recipes.models import (Favorite, Follow, Ingredient, Recipe,
+                            RecipeIngredient, ShoppingCart, Tag)
 
 
 User = get_user_model()
@@ -46,8 +48,9 @@ class UserSerializer(DjoserUserSerializer):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
-        return Follow.objects.filter(user=request.user,
-                                     author=obj).exists()
+        return Follow.objects.filter(
+            user=request.user, author=obj
+        ).exists()
 
 
 class UserCreateSerializer(DjoserUserCreateSerializer):
@@ -56,12 +59,12 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
     first_name = serializers.CharField(
         required=True,
         allow_blank=False,
-        max_length=150,
+        max_length=NAME_MAX_LENGTH,
     )
     last_name = serializers.CharField(
         required=True,
         allow_blank=False,
-        max_length=150,
+        max_length=NAME_MAX_LENGTH,
     )
 
     class Meta:
@@ -99,9 +102,10 @@ class SubscriptionSerializer(UserSerializer):
     def get_recipes(self, obj):
         request = self.context.get('request')
         recipes = obj.recipes.all()
-        limit = request.query_params.get('recipes_limit')
-        if limit and limit.isdigit():
-            recipes = recipes[:int(limit)]
+        if request:
+            limit = request.query_params.get('recipes_limit')
+            if limit and limit.isdigit():
+                recipes = recipes[:int(limit)]
         return ShortRecipeSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
@@ -127,8 +131,10 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientAmountSerializer(serializers.Serializer):
     """Сериализатор ингредиента с количеством."""
 
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField(min_value=1)
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+    amount = serializers.IntegerField(min_value=MIN_AMOUNT)
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -149,21 +155,31 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_ingredients(self, obj):
-        return [{'id': ingredient.ingredient.id,
-                 'name': ingredient.ingredient.name,
-                 'measurement_unit': ingredient.ingredient.measurement_unit,
-                 'amount': ingredient.amount}
-                for ingredient in obj.recipe_ingredients.all()]
+        return [
+            {
+                'id': ingredient.ingredient.id,
+                'name': ingredient.ingredient.name,
+                'measurement_unit': ingredient.ingredient.measurement_unit,
+                'amount': ingredient.amount,
+            }
+            for ingredient in obj.recipe_ingredients.all()
+        ]
 
     def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return (user.is_authenticated
-                and user.favorites.filter(id=obj.id).exists())
+        request = self.context['request']
+        if not request.user.is_authenticated:
+            return False
+        return Favorite.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        return (user.is_authenticated
-                and user.shopping_cart.filter(id=obj.id).exists())
+        request = self.context['request']
+        if not request.user.is_authenticated:
+            return False
+        return ShoppingCart.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -208,7 +224,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cooking_time(self, value):
-        if value < 1:
+        if value < MIN_COOKING_TIME:
             raise serializers.ValidationError(
                 'Время приготовления должно быть больше 0.'
             )
@@ -220,8 +236,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags_data)
         RecipeIngredient.objects.bulk_create([
-            RecipeIngredient(recipe=recipe, ingredient=i['id'],
-                             amount=i['amount'])
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=i['id'],
+                amount=i['amount'],
+            )
             for i in ingredients_data
         ])
         return recipe
@@ -229,11 +248,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients', None)
         tags_data = validated_data.pop('tags', None)
+
         if ingredients_data is None:
             raise serializers.ValidationError(
                 {'ingredients': 'Обязательное поле.'}
             )
-
         if tags_data is None:
             raise serializers.ValidationError(
                 {'tags': 'Обязательное поле.'}
@@ -243,16 +262,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        if tags_data is not None:
-            instance.tags.set(tags_data)
-
-        if ingredients_data is not None:
-            instance.recipe_ingredients.all().delete()
-            RecipeIngredient.objects.bulk_create([
-                RecipeIngredient(recipe=instance, ingredient=i['id'],
-                                 amount=i['amount'])
-                for i in ingredients_data
-            ])
+        instance.tags.set(tags_data)
+        instance.recipe_ingredients.all().delete()
+        RecipeIngredient.objects.bulk_create([
+            RecipeIngredient(
+                recipe=instance,
+                ingredient=i['id'],
+                amount=i['amount'],
+            )
+            for i in ingredients_data
+        ])
         return instance
 
     def to_representation(self, instance):

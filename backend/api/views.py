@@ -81,7 +81,9 @@ class UserViewSet(DjoserUserViewSet):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if not Follow.objects.filter(user=request.user, author=author).exists():
+        if not Follow.objects.filter(
+            user=request.user, author=author
+        ).exists():
             return Response(
                 {'error': 'Вы не подписаны на данного пользователя'},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -94,7 +96,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецептов."""
 
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     pagination_class = Pagination
     filter_backends = (DjangoFilterBackend,)

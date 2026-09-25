@@ -1,30 +1,30 @@
-# Foodgram — сайт рецептов
+# Foodgram
 
-## О проекте
+![Foodgram workflow](https://github.com/Kirillk/foodgram/actions/workflows/main.yml/badge.svg)
 
-Foodgram — это платформа для публикации рецептов, подписки на авторов и формирования списка покупок. Пользователи могут создавать рецепты с ингредиентами и тегами, добавлять чужие рецепты в избранное и корзину, а также скачивать сводный список покупок в текстовом формате.
+## Ссылки
 
-## Адрес проекта
+- **Сайт:** https://foodgram.indevs.in
+- **Админка:** https://foodgram.indevs.in/admin/
+- **API:** https://foodgram.indevs.in/api/
+- **Документация API (ReDoc):** https://foodgram.indevs.in/api/docs/
 
-Проект запущен на сервере и доступен по адресу:
+## Описание проекта
 
-**http://81.26.178.46**
+Foodgram — это платформа для публикации рецептов, подписки на авторов и формирования списка покупок. Проект создан в рамках обучения в Яндекс Практикуме и представляет собой полноценное веб-приложение с backend на Django и frontend на React.
 
-Также проект доступен по доменному имени:
+### Функциональность
 
-**https://foodgram.indevs.in**
-
-Административная панель Django:
-
-**https://foodgram.indevs.in/admin/**
-
-API проекта:
-
-**https://foodgram.indevs.in/api/**
-
-Документация API (Redoc):
-
-**https://foodgram.indevs.in/api/docs/**
+- Регистрация и авторизация по токену
+- Просмотр, создание, редактирование и удаление рецептов
+- Загрузка изображений блюд в формате Base64
+- Теги и ингредиенты для рецептов
+- Фильтрация рецептов по тегам, автору, избранному и списку покупок
+- Подписка на авторов и просмотр их рецептов
+- Добавление рецептов в избранное
+- Формирование списка покупок и скачивание его в формате TXT
+- Короткие ссылки на рецепты
+- Административная панель для управления контентом
 
 ## Стек технологий
 
@@ -35,298 +35,133 @@ API проекта:
 - **Контейнеризация:** Docker, Docker Compose
 - **CI/CD:** GitHub Actions
 - **Хранение образов:** Docker Hub
+- **SSL:** Let's Encrypt
 
-## Автор
+## Развёртывание проекта
 
-**Telegram:** [@kiyrer](https://t.me/kiyrer)
+### Требования
 
----
+- Docker и Docker Compose
+- Git
 
-## Эндпоинты API
+### Локальный запуск
 
-### Пользователи
+1. Клонируйте репозиторий:
 
-**GET** `/api/users/` — список пользователей (пагинация: `page`, `limit`)
-
-Пример ответа:
-```json
-{
-    "count": 2,
-    "next": null,
-    "previous": null,
-    "results": [
-        {
-            "email": "vpupkin@yandex.ru",
-            "id": 1,
-            "username": "vasya.pupkin",
-            "first_name": "Вася",
-            "last_name": "Иванов",
-            "is_subscribed": false,
-            "avatar": null
-        }
-    ]
-}
+```bash
+git clone https://github.com/Kirillk/foodgram.git
+cd foodgram
 ```
 
-**POST** `/api/users/` — регистрация нового пользователя
+2. Создайте файл `.env` в корне проекта (см. раздел «Настройка переменных окружения»).
 
-Пример запроса:
-```json
-{
-    "email": "vpupkin@yandex.ru",
-    "username": "vasya.pupkin",
-    "first_name": "Вася",
-    "last_name": "Иванов",
-    "password": "Qwerty123"
-}
+3. Запустите контейнеры:
+
+```bash
+docker compose up -d --build
 ```
 
-Пример ответа (201):
-```json
-{
-    "email": "vpupkin@yandex.ru",
-    "id": 1,
-    "username": "vasya.pupkin",
-    "first_name": "Вася",
-    "last_name": "Иванов"
-}
+4. Выполните миграции:
+
+```bash
+docker compose exec backend python manage.py migrate
 ```
 
-**GET** `/api/users/{id}/` — профиль пользователя
+5. Создайте суперпользователя:
 
-**GET** `/api/users/me/` — текущий пользователь (требуется токен)
-
-**PUT** `/api/users/me/avatar/` — загрузка аватара (требуется токен)
-
-Пример запроса:
-```json
-{
-    "avatar": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAgMAAABieywaAAAACVBMVEUAAAD///9fX1/S0ecCAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNoAAAAggCByxOyYQAAAABJRU5ErkJggg=="
-}
+```bash
+docker compose exec backend python manage.py createsuperuser
 ```
 
-**DELETE** `/api/users/me/avatar/` — удаление аватара (требуется токен)
+6. Соберите статику:
 
-**POST** `/api/users/set_password/` — смена пароля (требуется токен)
-
-Пример запроса:
-```json
-{
-    "new_password": "NewQwerty123",
-    "current_password": "Qwerty123"
-}
+```bash
+docker compose exec backend python manage.py collectstatic --noinput
 ```
 
-### Аутентификация
+7. Сайт доступен по адресу http://localhost:7000/
 
-**POST** `/api/auth/token/login/` — получение токена
+### Развёртывание на сервере
 
-Пример запроса:
-```json
-{
-    "email": "vpupkin@yandex.ru",
-    "password": "Qwerty123"
-}
-```
-
-Пример ответа:
-```json
-{
-    "auth_token": "a1b2c3d4e5f6g7h8i9j0"
-}
-```
-
-**POST** `/api/auth/token/logout/` — удаление токена (требуется токен)
-
-### Подписки
-
-**GET** `/api/users/subscriptions/` — список подписок (требуется токен)
-
-Параметры: `page`, `limit`, `recipes_limit`
-
-**POST** `/api/users/{id}/subscribe/` — подписаться на пользователя (требуется токен)
-
-**DELETE** `/api/users/{id}/subscribe/` — отписаться (требуется токен)
-
-### Теги
-
-**GET** `/api/tags/` — список тегов
-
-Пример ответа:
-```json
-[
-    {
-        "id": 1,
-        "name": "Завтрак",
-        "slug": "breakfast"
-    },
-    {
-        "id": 2,
-        "name": "Обед",
-        "slug": "lunch"
-    }
-]
-```
-
-**GET** `/api/tags/{id}/` — получение тега
-
-### Ингредиенты
-
-**GET** `/api/ingredients/` — список ингредиентов
-
-Параметры: `name` (поиск по началу названия)
-
-Пример ответа:
-```json
-[
-    {
-        "id": 1,
-        "name": "Мука пшеничная",
-        "measurement_unit": "г"
-    },
-    {
-        "id": 2,
-        "name": "Сахар",
-        "measurement_unit": "г"
-    }
-]
-```
-
-**GET** `/api/ingredients/{id}/` — получение ингредиента
-
-### Рецепты
-
-**GET** `/api/recipes/` — список рецептов
-
-Параметры:
-- `page`, `limit` — пагинация
-- `is_favorited` — 0 или 1
-- `is_in_shopping_cart` — 0 или 1
-- `author` — id автора
-- `tags` — slug тегов
-
-Пример ответа:
-```json
-{
-    "count": 1,
-    "next": null,
-    "previous": null,
-    "results": [
-        {
-            "id": 1,
-            "tags": [
-                {
-                    "id": 1,
-                    "name": "Завтрак",
-                    "slug": "breakfast"
-                }
-            ],
-            "author": {
-                "email": "vpupkin@yandex.ru",
-                "id": 1,
-                "username": "vasya.pupkin",
-                "first_name": "Вася",
-                "last_name": "Иванов",
-                "is_subscribed": false,
-                "avatar": null
-            },
-            "ingredients": [
-                {
-                    "id": 1,
-                    "name": "Мука пшеничная",
-                    "measurement_unit": "г",
-                    "amount": 300
-                }
-            ],
-            "is_favorited": false,
-            "is_in_shopping_cart": false,
-            "name": "Пицца Маргарита",
-            "image": "http://foodgram.indevs.in/media/recipes/images/pizza.png",
-            "text": "Описание рецепта",
-            "cooking_time": 90
-        }
-    ]
-}
-```
-
-**POST** `/api/recipes/` — создание рецепта (требуется токен)
-
-Пример запроса:
-```json
-{
-    "tags": [1, 2],
-    "ingredients": [
-        {
-            "id": 1,
-            "amount": 300
-        }
-    ],
-    "name": "Пицца Маргарита",
-    "image": "data:image/png;base64,iVBORw0KGgo...",
-    "text": "Описание рецепта",
-    "cooking_time": 90
-}
-```
-
-**GET** `/api/recipes/{id}/` — получение рецепта
-
-**PATCH** `/api/recipes/{id}/` — обновление рецепта (только автор, требуется токен)
-
-**DELETE** `/api/recipes/{id}/` — удаление рецепта (только автор, требуется токен)
-
-**GET** `/api/recipes/{id}/get-link/` — короткая ссылка на рецепт
-
-Пример ответа:
-```json
-{
-    "short-link": "https://foodgram.indevs.in/s/3d0"
-}
-```
-
-### Избранное
-
-**POST** `/api/recipes/{id}/favorite/` — добавить в избранное (требуется токен)
-
-**DELETE** `/api/recipes/{id}/favorite/` — удалить из избранного (требуется токен)
-
-### Список покупок
-
-**POST** `/api/recipes/{id}/shopping_cart/` — добавить в корзину (требуется токен)
-
-**DELETE** `/api/recipes/{id}/shopping_cart/` — удалить из корзины (требуется токен)
-
-**GET** `/api/recipes/download_shopping_cart/` — скачать список покупок (требуется токен)
-
-Ответ — файл `shopping_cart.txt` в кодировке UTF-8.
-
-Пример содержимого:
-```
-Список покупок:
-
-Мука пшеничная. 300 (г)
-Сахар. 150 (г)
-Яйца куриные. 3 (шт.)
-```
-
----
-
-## Авторизация
-
-Все защищённые эндпоинты требуют заголовок:
-
-```
-Authorization: Token a1b2c3d4e5f6g7h8i9j0
-```
-
-Токен получается через `POST /api/auth/token/login/`.
-
----
-
-## Развёртывание
-
-Проект собирается и разворачивается автоматически через GitHub Actions при каждом пуше в репозиторий:
+Проект разворачивается автоматически через GitHub Actions при каждом пуше в ветку `main`:
 
 1. Собираются образы backend, frontend и nginx.
 2. Образы публикуются в Docker Hub.
 3. На сервере выполняется `docker compose pull` и `up -d`.
 4. Применяются миграции и собирается статика.
+
+Для ручного деплоя на сервере:
+
+```bash
+cd ~/foodgram
+sudo docker compose -f docker-compose.production.yml pull
+sudo docker compose -f docker-compose.production.yml up -d
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
+```
+
+## Загрузка тестовых данных
+
+В проекте есть management-команда для загрузки ингредиентов из CSV-файла:
+
+```bash
+docker compose exec backend python manage.py load_ingredients /app/data/ingredients.csv
+```
+
+**Ожидаемый вывод:**
+
+```
+Создано: 1378, пропущено: 808
+```
+
+Файл `data/ingredients.csv` должен находиться внутри `backend/` — тогда он попадёт в Docker-образ.
+
+## Настройка переменных окружения
+
+Создайте файл `.env` в корне проекта:
+
+```env
+POSTGRES_DB=foodgram
+POSTGRES_USER=foodgram_user
+POSTGRES_PASSWORD=your_strong_password
+DB_HOST=db
+DB_PORT=5432
+SECRET_KEY=your_secret_key_here
+DEBUG=False
+ALLOWED_HOSTS=foodgram.indevs.in,localhost,127.0.0.1
+CSRF_TRUSTED_ORIGINS=https://foodgram.indevs.in
+```
+
+**Описание переменных:**
+
+| Переменная | Описание |
+|------------|----------|
+| `POSTGRES_DB` | Имя базы данных |
+| `POSTGRES_USER` | Пользователь PostgreSQL |
+| `POSTGRES_PASSWORD` | Пароль PostgreSQL |
+| `DB_HOST` | Хост базы данных (`db` в Docker) |
+| `DB_PORT` | Порт базы данных |
+| `SECRET_KEY` | Секретный ключ Django |
+| `DEBUG` | Режим отладки (`True` локально, `False` на проде) |
+| `ALLOWED_HOSTS` | Разрешённые хосты через запятую |
+| `CSRF_TRUSTED_ORIGINS` | Доверенные источники для CSRF |
+
+## Документация API
+
+Полная документация доступна по адресу:
+
+**https://foodgram.indevs.in/api/docs/**
+
+Также доступна OpenAPI-схема:
+
+**https://foodgram.indevs.in/api/schema/**
+
+## Автор
+
+**Telegram:** [@kiyrer](https://t.me/kiyrer)
+
+**GitHub:** [Kirullk](https://github.com/Kirullk)
+
+## Лицензия
+
+Проект создан в учебных целях.

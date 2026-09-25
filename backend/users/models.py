@@ -1,13 +1,26 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from api.constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH
+
 
 class User(AbstractUser):
     """Расширенная модель пользователя."""
 
     email = models.EmailField(
         'Email',
-        unique=True
+        max_length=EMAIL_MAX_LENGTH,
+        unique=True,
+    )
+    first_name = models.CharField(
+        'Имя',
+        max_length=NAME_MAX_LENGTH,
+        blank=False,
+    )
+    last_name = models.CharField(
+        'Фамилия',
+        max_length=NAME_MAX_LENGTH,
+        blank=False,
     )
     avatar = models.ImageField(
         'Аватар',
