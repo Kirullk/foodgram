@@ -102,7 +102,6 @@ class Recipe(models.Model):
     created_at = models.DateTimeField(
         'Дата создания',
         auto_now_add=True,
-        null=True,
     )
 
     class Meta:
