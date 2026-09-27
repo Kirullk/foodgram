@@ -1,6 +1,6 @@
 import django_filters
 
-from recipes.models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(django_filters.FilterSet):
@@ -19,18 +19,15 @@ class IngredientFilter(django_filters.FilterSet):
 class RecipeFilter(django_filters.FilterSet):
     """Фильтр рецептов."""
 
-    author = django_filters.NumberFilter(field_name='author_id')
     is_favorited = django_filters.NumberFilter(method='filter_favorited')
     is_in_shopping_cart = django_filters.NumberFilter(
         method='filter_in_cart'
     )
-    tags = django_filters.CharFilter(method='filter_tags')
-
-    def filter_tags(self, queryset, name, value):
-        tags = self.request.query_params.getlist('tags')
-        if tags:
-            return queryset.filter(tags__slug__in=tags).distinct()
-        return queryset
+    tags = django_filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all(),
+    )
 
     class Meta:
         model = Recipe
@@ -38,10 +35,10 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_favorited(self, queryset, name, value):
         if self.request.user.is_authenticated and value == 1:
-            return queryset.filter(favorited_by__user=self.request.user)
+            return queryset.filter(favorites__user=self.request.user)
         return queryset
 
     def filter_in_cart(self, queryset, name, value):
         if self.request.user.is_authenticated and value == 1:
-            return queryset.filter(in_carts__user=self.request.user)
+            return queryset.filter(shopping_cart__user=self.request.user)
         return queryset

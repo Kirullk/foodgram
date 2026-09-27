@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
-from .models import (Favorite, Follow, Ingredient, Recipe,
+from .models import (Favorite, Ingredient, Recipe,
                      RecipeIngredient, ShoppingCart, Tag)
 
 
@@ -8,16 +9,18 @@ from .models import (Favorite, Follow, Ingredient, Recipe,
 class TagAdmin(admin.ModelAdmin):
     """Админка тегов."""
 
-    list_display = ('name', 'slug')
-    search_fields = ('name',)
+    list_display = ('id', 'name', 'slug')
+    search_fields = ('name', 'slug')
+    list_filter = ('name',)
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     """Админка ингредиентов."""
 
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
+    list_filter = ('measurement_unit',)
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -33,19 +36,40 @@ class RecipeIngredientInline(admin.TabularInline):
 class RecipeAdmin(admin.ModelAdmin):
     """Админка рецептов."""
 
-    list_display = ('id', 'name', 'author_name', 'cooking_time')
-    search_fields = ('name', 'author__first_name')
-    list_filter = ('tags',)
-    readonly_fields = ('favorites_count',)
+    list_display = (
+        'id', 'name', 'author_link', 'cooking_time',
+        'tags_list', 'ingredients_list', 'image_preview',
+        'favorites_count',
+    )
+    search_fields = ('name', 'author__first_name', 'author__email')
+    list_filter = ('tags', 'author')
+    readonly_fields = ('favorites_count', 'image_preview')
     inlines = (RecipeIngredientInline,)
 
-    def author_name(self, obj):
-        return obj.author.first_name
-    author_name.short_description = 'Автор'
+    @admin.display(description='Автор')
+    def author_link(self, obj):
+        url = f'/admin/users/user/{obj.author.id}/change/'
+        return mark_safe(f'<a href="{url}">{obj.author.username}</a>')
 
+    @admin.display(description='Теги')
+    def tags_list(self, obj):
+        return ', '.join(tag.name for tag in obj.tags.all())
+
+    @admin.display(description='Ингредиенты')
+    def ingredients_list(self, obj):
+        return ', '.join(f'{ri.ingredient.name} — {ri.amount}'
+                         for ri in obj.recipe_ingredients.all()
+                         )
+
+    @admin.display(description='Картинка')
+    def image_preview(self, obj):
+        return mark_safe(
+            f'<img src="{obj.image.url}" width="80" height="60">'
+        )
+
+    @admin.display(description='В избранном')
     def favorites_count(self, obj):
-        return obj.favorited_by.count()
-    favorites_count.short_description = 'В избранном'
+        return obj.favorites.count()
 
 
 @admin.register(Favorite)
@@ -54,6 +78,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
+    list_filter = ('user',)
 
 
 @admin.register(ShoppingCart)
@@ -62,11 +87,4 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
-
-
-@admin.register(Follow)
-class FollowAdmin(admin.ModelAdmin):
-    """Админка подписок."""
-
-    list_display = ('id', 'user', 'author')
-    search_fields = ('user__username', 'author__username')
+    list_filter = ('user',)

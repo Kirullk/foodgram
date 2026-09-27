@@ -66,22 +66,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.getenv('USE_SQLITE', 'false').lower() == 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'foodgram'),
-        'USER': os.getenv('POSTGRES_USER', 'user_foodgram'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432),
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'foodgram'),
+            'USER': os.getenv('POSTGRES_USER', 'user_foodgram'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', ''),
+            'PORT': os.getenv('DB_PORT', 5432),
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -125,9 +127,6 @@ MAILERS = {
 AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
@@ -137,6 +136,10 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'api.serializers.UserSerializer',
         'current_user': 'api.serializers.UserSerializer',
-        'user_create': 'api.serializers.UserCreateSerializer',
+    },
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.AllowAny'],
+        'user_create': ['rest_framework.permissions.AllowAny'],
+        'user': ['rest_framework.permissions.AllowAny'],
     },
 }
