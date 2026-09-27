@@ -103,14 +103,14 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return attrs
 
     def to_representation(self, instance):
-            author = User.objects.filter(
-                pk=instance.author_id
-            ).annotate(
-                recipes_count=Count('recipes')
-            ).first()
-            return SubscriptionSerializer(
-                author, context=self.context,
-            ).data
+        author = User.objects.filter(
+            pk=instance.author_id
+        ).annotate(
+            recipes_count=Count('recipes')
+        ).first()
+        return SubscriptionSerializer(
+            author, context=self.context,
+        ).data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -169,11 +169,12 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         source='recipe_ingredients',
-        many=True
+        many=True,
+        read_only=True,
     )
     author = UserSerializer()
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField(read_only=True)
+    is_in_shopping_cart = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -182,29 +183,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'image', 'text', 'is_favorited',
             'cooking_time'
         )
-
-    def get_ingredients(self, obj):
-        return [
-            {
-                'id': ingredient.ingredient.id,
-                'name': ingredient.ingredient.name,
-                'measurement_unit': ingredient.ingredient.measurement_unit,
-                'amount': ingredient.amount,
-            }
-            for ingredient in obj.recipe_ingredients.all()
-        ]
-
-    def get_is_favorited(self, obj):
-        request = self.context['request']
-        return (request
-                and request.user.is_authenticated
-                and obj.favorites.filter(user=request.user).exists())
-
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context['request']
-        return (request
-                and request.user.is_authenticated
-                and obj.shopping_cart.filter(user=request.user).exists())
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):

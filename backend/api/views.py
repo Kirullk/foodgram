@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Sum
+from django.db.models import Count, Exists, OuterRef, Sum
 from django.http import FileResponse, HttpResponsePermanentRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -127,6 +127,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ('get', 'post', 'patch', 'delete', 'head', 'options')
+
+    def get_queryset(self):
+        """Queryset с аннотациями избранного и корзины."""
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.is_authenticated:
+            return queryset.annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(
+                        user=user, recipe=OuterRef('pk')
+                    )
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        user=user, recipe=OuterRef('pk')
+                    )
+                ),
+            )
+        return queryset.annotate(
+            is_favorited=Exists(Favorite.objects.none()),
+            is_in_shopping_cart=Exists(ShoppingCart.objects.none()),
+        )
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
