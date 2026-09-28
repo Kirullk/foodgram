@@ -74,7 +74,7 @@ class UserViewSet(DjoserUserViewSet):
             user=request.user, author=author
         ).delete()
 
-        if deleted == 0:
+        if not deleted:
             return Response(
                 {'error': 'Вы не подписаны на данного пользователя'},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -105,9 +105,11 @@ class UserViewSet(DjoserUserViewSet):
             url_path='subscriptions',
             permission_classes=(IsAuthenticated,),)
     def subscriptions(self, request):
-        authors = User.objects.filter(subscribers__user=request.user).annotate(
+        authors = User.objects.filter(
+            authors_subscribers__user=request.user
+        ).annotate(
             recipes_count=Count('recipes')
-        )
+        ).order_by('username')
         page = self.paginate_queryset(authors)
         serializer = SubscriptionSerializer(
             page, many=True, context={'request': request},
@@ -132,24 +134,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Queryset с аннотациями избранного и корзины."""
         queryset = super().get_queryset()
         user = self.request.user
+        is_favorited = False
+        is_in_shopping_cart = False
 
         if user.is_authenticated:
-            return queryset.annotate(
-                is_favorited=Exists(
-                    Favorite.objects.filter(
-                        user=user, recipe=OuterRef('pk')
-                    )
-                ),
-                is_in_shopping_cart=Exists(
-                    ShoppingCart.objects.filter(
-                        user=user, recipe=OuterRef('pk')
-                    )
-                ),
+            is_favorited = Exists(
+                Favorite.objects.filter(
+                    user=user, recipe=OuterRef('pk')
+                )
             )
-        return queryset.annotate(
-            is_favorited=Exists(Favorite.objects.none()),
-            is_in_shopping_cart=Exists(ShoppingCart.objects.none()),
-        )
+            is_in_shopping_cart = Exists(
+                ShoppingCart.objects.filter(
+                    user=user, recipe=OuterRef('pk')
+                )
+            )
+
+        return queryset.annotate(is_favorited=is_favorited,
+                                 is_in_shopping_cart=is_in_shopping_cart
+                                 ).order_by('-created_at')
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -162,14 +164,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @staticmethod
     def format_shopping_cart(ingredients):
         """Формирует текст списка покупок."""
-
         lines = ['Список покупок:', '']
         for item in ingredients:
-            lines.append(
-                f"{item['ingredient__name']} — "
-                f"{item['total_amount']} "
-                f"({item['ingredient__measurement_unit']})"
-            )
+            lines.append(item['ingredient__name'],
+                         item['total_amount'],
+                         item['ingredient__measurement_unit'])
+
         return '\n'.join(lines)
 
     @staticmethod
@@ -193,7 +193,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         deleted, _ = model.objects.filter(
             user=request.user, recipe_id=pk
         ).delete()
-        if deleted == 0:
+        if not deleted:
             return Response(
                 {'error': 'Рецепта нет в этом списке.'},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -206,13 +206,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         """Добавить рецепт в избранное."""
-
         return self.add_to(FavoriteCreateSerializer, request, pk)
 
     @favorite.mapping.delete
     def unfavorite(self, request, pk=None):
         """Удалить рецепт из избранного."""
-
         return self.remove_from(Favorite, request, pk)
 
     @action(
@@ -221,13 +219,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         """Добавить рецепт в список покупок."""
-
         return self.add_to(ShoppingCartCreateSerializer, request, pk)
 
     @shopping_cart.mapping.delete
     def remove_from_shopping_cart(self, request, pk=None):
         """Удалить рецепт из списка покупок."""
-
         return self.remove_from(ShoppingCart, request, pk)
 
     @action(detail=True, methods=('get',), url_path='get-link',
@@ -290,9 +286,9 @@ def short_link_redirect(request, code):
     """Редирект по короткой ссылке на рецепт."""
     try:
         recipe = Recipe.objects.get(short_code=code)
-        url = reverse('recipe-detail', args=[recipe.id])
+        url = f'/recipes/{recipe.id}/'
     except Recipe.DoesNotExist:
-        url = reverse('not-found')
+        url = '/not_found'
 
     return HttpResponsePermanentRedirect(
         request.build_absolute_uri(url)

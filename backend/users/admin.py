@@ -11,17 +11,18 @@ User = get_user_model()
 class UserAdmin(DjangoUserAdmin):
     """Расширенная админка пользователя."""
 
-    list_display = ('id', 'email', 'username', 'first_name', 'last_name')
+    list_display = ('id', 'email', 'username', 'first_name',
+                    'last_name', 'recipes_count', 'subscribers_count')
     search_fields = ('email', 'username', 'first_name', 'last_name')
     list_filter = ('is_staff', 'is_superuser', 'is_active')
 
+    @admin.display(description='Рецептов')
     def recipes_count(self, obj):
         return obj.recipes.count()
-    recipes_count.short_description = 'Рецептов'
 
-    def followers_count(self, obj):
-        return obj.following.count()
-    followers_count.short_description = 'Подписчиков'
+    @admin.display(description='Подписчиков')
+    def subscribers_count(self, obj):
+        return obj.authors_subscribers.count()
 
 
 @admin.register(Follow)

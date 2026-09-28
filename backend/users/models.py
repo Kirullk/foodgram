@@ -45,20 +45,20 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscriptions',
+        related_name='users_subscriptions',
         verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribers',
+        related_name='authors_subscribers',
         verbose_name='Автор',
     )
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),
                 name='unique_follow',
@@ -67,7 +67,7 @@ class Follow(models.Model):
                 condition=~models.Q(user=models.F('author')),
                 name='prevent_self_follow',
             ),
-        ]
+        )
 
     def __str__(self):
         return f'{self.user} → {self.author}'

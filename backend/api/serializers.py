@@ -34,7 +34,7 @@ class UserSerializer(DjoserUserSerializer):
         request = self.context.get('request')
         return (request
                 and request.user.is_authenticated
-                and obj.subscribers.filter(user=request.user).exists())
+                and obj.authors_subscribers.filter(user=request.user).exists())
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -51,7 +51,7 @@ class SubscriptionSerializer(UserSerializer):
     """Сериализатор подписок с рецептами автора."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField()
+    recipes_count = serializers.IntegerField(default=0)
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + (
@@ -75,15 +75,6 @@ class SubscriptionSerializer(UserSerializer):
 class SubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор создания подписки."""
 
-    user = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        write_only=True,
-    )
-    author = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        write_only=True,
-    )
-
     class Meta:
         model = Follow
         fields = ('user', 'author')
@@ -103,14 +94,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return attrs
 
     def to_representation(self, instance):
-        author = User.objects.filter(
-            pk=instance.author_id
-        ).annotate(
-            recipes_count=Count('recipes')
-        ).first()
-        return SubscriptionSerializer(
-            author, context=self.context,
-        ).data
+        return SubscriptionSerializer(instance, context=self.context).data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -173,8 +157,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     author = UserSerializer()
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.BooleanField(read_only=True,
+                                            default=False)
+    is_in_shopping_cart = serializers.BooleanField(read_only=True,
+                                                   default=False)
 
     class Meta:
         model = Recipe
@@ -279,11 +265,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 {'tags': 'Обязательное поле.'}
             )
 
-        instance = super().update(instance, validated_data)
         instance.tags.set(tags_data)
         instance.recipe_ingredients.all().delete()
         self.create_recipe_ingredients(instance, ingredients_data)
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         return RecipeSerializer(instance, context=self.context).data
@@ -300,22 +285,16 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 class AbstractUserRecipeSerializer(serializers.ModelSerializer):
     """Абстрактный сериализатор связи пользователя и рецепта."""
 
-    user = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-    )
-    recipe = serializers.PrimaryKeyRelatedField(
-        queryset=Recipe.objects.all(),
-    )
-
     class Meta:
         fields = ('user', 'recipe')
 
     def validate(self, attrs):
+        model = self.Meta.model
         user = attrs['user']
         recipe = attrs['recipe']
-        if self.Meta.model.objects.filter(user=user, recipe=recipe).exists():
+        if model.objects.filter(user=user, recipe=recipe).exists():
             raise serializers.ValidationError(
-                self.error_message
+                f'Рецепт уже добавлен в {model._meta.verbose_name}.'
             )
         return attrs
 
@@ -329,16 +308,12 @@ class AbstractUserRecipeSerializer(serializers.ModelSerializer):
 class FavoriteCreateSerializer(AbstractUserRecipeSerializer):
     """Сериализатор создания избранного."""
 
-    error_message = 'Рецепт уже добавлен в избранное.'
-
     class Meta(AbstractUserRecipeSerializer.Meta):
         model = Favorite
 
 
 class ShoppingCartCreateSerializer(AbstractUserRecipeSerializer):
     """Сериализатор создания списка покупок."""
-
-    error_message = 'Рецепт уже добавлен в список покупок.'
 
     class Meta(AbstractUserRecipeSerializer.Meta):
         model = ShoppingCart

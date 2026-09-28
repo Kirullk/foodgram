@@ -34,7 +34,7 @@ class Tag(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return self.name
+        return self.name[:20] + '...'
 
 
 class Ingredient(models.Model):
@@ -62,7 +62,7 @@ class Ingredient(models.Model):
         )
 
     def __str__(self):
-        return self.name
+        return self.name[:20] + '...'
 
 
 class Recipe(models.Model):
@@ -122,7 +122,7 @@ class Recipe(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return self.name[:20] + '...'
 
 
 class RecipeIngredient(models.Model):
@@ -175,9 +175,15 @@ class UserRecipeRelation(models.Model):
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_%(class)s',
+            ),
+        ]
 
     def __str__(self):
-        return {self._meta.verbose_name}
+        return f'{self.user} - {self.recipe} ({self._meta.verbose_name})'
 
 
 class Favorite(UserRecipeRelation):
@@ -187,12 +193,6 @@ class Favorite(UserRecipeRelation):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('user', 'recipe'),
-                name='unique_favorite',
-            ),
-        )
 
 
 class ShoppingCart(UserRecipeRelation):
@@ -202,9 +202,3 @@ class ShoppingCart(UserRecipeRelation):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
         default_related_name = 'shopping_cart'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('user', 'recipe'),
-                name='unique_shopping_cart',
-            ),
-        )

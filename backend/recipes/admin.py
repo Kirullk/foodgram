@@ -58,8 +58,7 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='Ингредиенты')
     def ingredients_list(self, obj):
         return ', '.join(f'{ri.ingredient.name} — {ri.amount}'
-                         for ri in obj.recipe_ingredients.all()
-                         )
+                         for ri in obj.recipe_ingredients.all())
 
     @admin.display(description='Картинка')
     def image_preview(self, obj):
