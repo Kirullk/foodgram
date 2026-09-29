@@ -1,7 +1,6 @@
 # Foodgram
 
 [![Main foodgram workflow](https://github.com/Kirullk/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/Kirullk/foodgram/actions/workflows/main.yml)
-
 ## Ссылки
 
 - **Сайт:** https://foodgram.indevs.in
