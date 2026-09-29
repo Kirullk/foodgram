@@ -22,8 +22,9 @@ from users.models import Follow
 from .serializers import (AvatarSerializer, FavoriteCreateSerializer,
                           IngredientSerializer,
                           RecipeCreateSerializer, RecipeSerializer,
-                          ShoppingCartCreateSerializer, SubscribeSerializer,
-                          SubscriptionSerializer, TagSerializer,
+                          ShoppingCartCreateSerializer,
+                          SubscriptionWriteSerializer,
+                          SubscriptionReadSerializer, TagSerializer,
                           UserSerializer)
 
 
@@ -57,7 +58,7 @@ class UserViewSet(DjoserUserViewSet):
     def subscribe(self, request, id=None):
         """Подписка на пользователя."""
         author = get_object_or_404(User, id=id)
-        serializer = SubscribeSerializer(
+        serializer = SubscriptionWriteSerializer(
             data={'user': request.user.id,
                   'author': author.id},
             context={'request': request},
@@ -106,12 +107,12 @@ class UserViewSet(DjoserUserViewSet):
             permission_classes=(IsAuthenticated,),)
     def subscriptions(self, request):
         authors = User.objects.filter(
-            authors_subscribers__user=request.user
+            subscriptions_to_author__user=request.user
         ).annotate(
             recipes_count=Count('recipes')
         ).order_by('username')
         page = self.paginate_queryset(authors)
-        serializer = SubscriptionSerializer(
+        serializer = SubscriptionReadSerializer(
             page, many=True, context={'request': request},
         )
         return self.get_paginated_response(serializer.data)
@@ -149,9 +150,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 )
             )
 
-        return queryset.annotate(is_favorited=is_favorited,
-                                 is_in_shopping_cart=is_in_shopping_cart
-                                 ).order_by('-created_at')
+        return queryset.annotate(
+            is_favorited=is_favorited,
+            is_in_shopping_cart=is_in_shopping_cart
+        ).order_by('-created_at')
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -166,10 +168,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Формирует текст списка покупок."""
         lines = ['Список покупок:', '']
         for item in ingredients:
-            lines.append(item['ingredient__name'],
-                         item['total_amount'],
-                         item['ingredient__measurement_unit'])
-
+            lines.append(
+                f'{item["ingredient__name"]} — '
+                f'{item["total_amount"]} '
+                f'({item["ingredient__measurement_unit"]})'
+            )
         return '\n'.join(lines)
 
     @staticmethod

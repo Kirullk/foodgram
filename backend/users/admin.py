@@ -22,7 +22,7 @@ class UserAdmin(DjangoUserAdmin):
 
     @admin.display(description='Подписчиков')
     def subscribers_count(self, obj):
-        return obj.authors_subscribers.count()
+        return obj.subscriptions_to_author.count()
 
 
 @admin.register(Follow)

@@ -1,14 +1,15 @@
 import secrets
 
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxLengthValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from api.constants import (INGREDIENT_NAME_MAX_LENGTH,
                            MEASUREMENT_UNIT_MAX_LENGTH,
                            MAX_COOKING_TIME, MAX_AMOUNT, MIN_AMOUNT,
-                           MIN_COOKING_TIME, RECIPE_NAME_MAX_LENGTH,
-                           SHORT_CODE_MAX_LENGTH, TAG_MAX_LENGTH)
+                           MIN_COOKING_TIME, MAX_NAME_LENGTH,
+                           RECIPE_NAME_MAX_LENGTH, SHORT_CODE_MAX_LENGTH,
+                           TAG_MAX_LENGTH)
 
 
 User = get_user_model()
@@ -62,7 +63,7 @@ class Ingredient(models.Model):
         )
 
     def __str__(self):
-        return self.name[:20] + '...'
+        return self.name[:MAX_NAME_LENGTH] + '...'
 
 
 class Recipe(models.Model):
@@ -98,7 +99,7 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления (мин)',
         validators=(MinValueValidator(MIN_COOKING_TIME),
-                    MaxLengthValidator(MAX_COOKING_TIME)),
+                    MaxValueValidator(MAX_COOKING_TIME)),
     )
     short_code = models.CharField(
         'Короткая ссылка',
@@ -122,7 +123,7 @@ class Recipe(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name[:20] + '...'
+        return self.name[:MAX_NAME_LENGTH] + '...'
 
 
 class RecipeIngredient(models.Model):
@@ -141,7 +142,7 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         'Количество',
         validators=(MinValueValidator(MIN_AMOUNT),
-                    MaxLengthValidator(MAX_AMOUNT)),
+                    MaxValueValidator(MAX_AMOUNT)),
     )
 
     class Meta:
@@ -175,12 +176,12 @@ class UserRecipeRelation(models.Model):
 
     class Meta:
         abstract = True
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
                 name='unique_%(class)s',
             ),
-        ]
+        )
 
     def __str__(self):
         return f'{self.user} - {self.recipe} ({self._meta.verbose_name})'
@@ -189,7 +190,7 @@ class UserRecipeRelation(models.Model):
 class Favorite(UserRecipeRelation):
     """Избранные рецепты пользователя."""
 
-    class Meta:
+    class Meta(UserRecipeRelation.Meta):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
@@ -198,7 +199,7 @@ class Favorite(UserRecipeRelation):
 class ShoppingCart(UserRecipeRelation):
     """Список покупок пользователя."""
 
-    class Meta:
+    class Meta(UserRecipeRelation.Meta):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
         default_related_name = 'shopping_cart'

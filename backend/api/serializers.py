@@ -33,7 +33,9 @@ class UserSerializer(DjoserUserSerializer):
         request = self.context.get('request')
         return (request
                 and request.user.is_authenticated
-                and obj.authors_subscribers.filter(user=request.user).exists())
+                and obj.subscriptions_to_author.filter(
+                    user=request.user
+                ).exists())
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -46,7 +48,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ('avatar',)
 
 
-class SubscriptionSerializer(UserSerializer):
+class SubscriptionReadSerializer(UserSerializer):
     """Сериализатор подписок с рецептами автора."""
 
     recipes = serializers.SerializerMethodField()
@@ -71,7 +73,7 @@ class SubscriptionSerializer(UserSerializer):
         ).data
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
+class SubscriptionWriteSerializer(serializers.ModelSerializer):
     """Сериализатор создания подписки."""
 
     class Meta:
@@ -93,7 +95,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return attrs
 
     def to_representation(self, instance):
-        return SubscriptionSerializer(instance, context=self.context).data
+        return SubscriptionReadSerializer(instance, context=self.context).data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -181,12 +183,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         min_value=MIN_COOKING_TIME,
         max_value=MAX_COOKING_TIME,
         error_messages={
-            'min_value': (
-                f'Время приготовления не может быть меньше {MIN_COOKING_TIME}.'
-            ),
-            'max_value': (
-                f'Время приготовления не может быть больше {MAX_COOKING_TIME}.'
-            ),
+            'min_value':
+            f'Время приготовления не может быть меньше {MIN_COOKING_TIME}.',
+            'max_value':
+            f'Время приготовления не может быть больше {MAX_COOKING_TIME}.',
+            'required': 'Поле cooking_time обязательно.',
+            'invalid': 'cooking_time должен быть числом.',
         },
     )
     image = Base64ImageField()
