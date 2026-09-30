@@ -35,7 +35,7 @@ class Tag(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return self.name[:20] + '...'
+        return self.name[:MAX_NAME_LENGTH] + '...'
 
 
 class Ingredient(models.Model):

@@ -95,7 +95,8 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
         return attrs
 
     def to_representation(self, instance):
-        return SubscriptionReadSerializer(instance, context=self.context).data
+        return SubscriptionReadSerializer(instance.author,
+                                          context=self.context).data
 
 
 class TagSerializer(serializers.ModelSerializer):
